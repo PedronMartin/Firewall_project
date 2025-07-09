@@ -1,7 +1,8 @@
 # Firewall_project
 
+######################################################################
 ############################VERSIONE IN ITALIANO#######################
-#######################################################################
+#####################################################################
 ### Scopo del Progetto
 
 Questo progetto nasce dalla volontà di approfondire la conoscenza del networking al livello di sistema operativo. Il mio scopo è quello di appronfondire:
@@ -10,8 +11,9 @@ Questo progetto nasce dalla volontà di approfondire la conoscenza del networkin
   3) implementare logiche di filtro basate su regole definite (es. indirizzi IP, porte, protocolli);
   4) eventualmente, gestire lo stato delle connessioni (firewall stateful).
 
+######################################################################
 #############################ENGLISH VERSION############################
-########################################################################
+######################################################################
 ### Goal of the project
 
 This project comes from my desire to increase my understanding of OS-level networking. My primary goals are to explore:
