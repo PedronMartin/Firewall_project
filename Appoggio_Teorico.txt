@@ -1,0 +1,25 @@
+SYS CALL:
+    1) socket(): per creare il socket raw;
+    2) bind(): per associare il socket a un'interfaccia specifica (vedi più avanti);
+    3) ioctl(): per configurare l'interfaccia di rete, inclusa l'abilitazione della modalità promiscua;
+    4) recvfrom()/read(): per ricevere i pacchetti grezzi dall'interfaccia.
+
+SOCKET:
+ - libreria ---> sys/socket.h + netinet/in.h + <linux/if_packet.h> + <net/ethernet.h>;
+ - utilizzo ---> 'int sockfd = socket(int socket_family, int socket_type, int protocol);',
+                        dove noi intendiamo usare le raw socket, dove i pacchetti sono completi e non privi di intestazione (raw). Visionando man raw, sezione 7
+                        vediamo come le raw socket si creano facilmente nello stesso modo delle socket, ma specificando i primi due campi in modo fisso.
+                            socket_family impostato a AF_INET, indica che vogliamo operare direttamente a livello data link (in generale esprime a che livello);
+                            socket_type è impostato a SOCK_RAW, cuore del discorso, indica che vogliamo i pacchetti grezzi, così come sono;
+                            protocol è il tipo di protocollo che vogliamo analizzare. Noi vogliamo tutto per cui specifichiamo htons(ETH_P_ALL), come previsto secondo
+                            il manuale di packet (sempre sezione 7); htons converte l'input in formato esadecimale, che serve per indicare quindi tutti i protocolli L2.
+
+IOCTL:
+ - libreria ---> <sys/ioctl.h + <net/if.h>;
+ - utilizzo ---> 'int ioctl(int fd, unsigned long op, ...);',
+                        dove fd è il file descriptor della socket di riferimento, op è la flag dell'operazione da fare (vedi man netdevice per approfondimenti),
+                        e struct la struttura preposta nel settare (o vedere) come questa socket viene gestita.
+                        La flag di op che ci interessa è SIOCSIFFLAGS, che setta la struttura che segue, ossia
+                        struct ifreq, che comprende campi come il nome dell'interfaccia da usare (ifr.name) e la flag di attivazione modalità promiscua (IFF_PROMISC).
+                        Le flag della struct sono tutte dentro ad una successione di bit unificati, per tanto per modificare una flag sola usiamo |= per non annullare
+                        altri campi impostati di default dalla struttura.
