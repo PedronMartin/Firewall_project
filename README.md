@@ -1,8 +1,8 @@
 # Firewall_project
 
-######################################################################
-############################VERSIONE IN ITALIANO#######################
 #####################################################################
+############################VERSIONE IN ITALIANO#######################
+####################################################################
 ### Scopo del Progetto
 
 Questo progetto nasce dalla volontà di approfondire la conoscenza del networking al livello di sistema operativo. Il mio scopo è quello di appronfondire:
