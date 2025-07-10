@@ -9,12 +9,17 @@
 //#include <net/if_arp.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 //global variables
 int sockfd = -1;
+#define max_MTU 1500
+char buffer[max_MTU];
 
 //function declarations
 void initialize_firewall(const char *interface);
+void sigint_handler();
+void packet_garbage();
 void shutdown_firewall();
 
 //initial point for the firewall program
@@ -30,6 +35,16 @@ int main(int argc, char *argv[]){
 
     //initialize the firewall with the specified network interface
     initialize_firewall(interface);
+
+    //set the signal handler to stop the firewall in secure way
+    if(signal(SIGINT, sigint_handler) == SIG_ERR){
+        perror("Error setting signal handler");
+        shutdown_firewall(-1);
+    }
+
+    //main loop to keep the firewall running
+    printf("Firewall is running. Press Ctrl+C to stop.\n");
+    packet_garbage();
 
     //exit point
     shutdown_firewall(0);
@@ -82,6 +97,45 @@ void initialize_firewall(const char *interface){
 
     printf("Firewall initialized on interface: %s\n", interface);
     return;
+}
+
+
+/*
+this function is called when the user presses Ctrl+C (SIGINT).
+It will shutdown the firewall in secure way and close the raw socket.
+*/
+void sigint_handler(){
+    /*
+    TODO:
+    maybe we can add a complete mask of signals to handle or ignore, to avoid the firewall to be stopped by an attacker from inside the system
+    */
+    printf("\n\n\n");
+    shutdown_firewall(0);
+}
+
+void packet_garbage(){
+
+    /*
+    TODO:
+    This function is a placeholder for the main loop of the firewall.
+    It should contain the logic to process incoming packets and apply firewall rules.
+    For now, it just takes and prints the packets without any filtering or processing.
+    */
+    while(1){
+        ssize_t bytes_received = recvfrom(sockfd, buffer, sizeof(buffer), 0, NULL, NULL);
+        if(bytes_received < 0){
+            perror("Error receiving packet");
+            //delete the packet without comunicating it to the sender (reset the buffer)
+            /*
+            TODO:
+            implement a logic to comunicate the sender that the packet has been dropped (depending on the reason why it has been dropped)
+            */
+            memset(buffer, 0, sizeof(buffer));
+            continue;
+        }
+        printf("[FIREWALL] Received packet of size: %zd\n", bytes_received);
+
+    }
 }
 
 /*

@@ -1,8 +1,7 @@
 SYS CALL:
     1) socket(): per creare il socket raw;
-    2) bind(): per associare il socket a un'interfaccia specifica (vedi più avanti);
-    3) ioctl(): per configurare l'interfaccia di rete, inclusa l'abilitazione della modalità promiscua;
-    4) recvfrom()/read(): per ricevere i pacchetti grezzi dall'interfaccia.
+    2) ioctl(): per configurare l'interfaccia di rete, inclusa l'abilitazione della modalità promiscua;
+    3) recvfrom()/read(): per ricevere i pacchetti grezzi dall'interfaccia.
 
 SOCKET:
  - libreria ---> sys/socket.h + netinet/in.h + <linux/if_packet.h> + <net/ethernet.h>;
@@ -23,3 +22,10 @@ IOCTL:
                         struct ifreq, che comprende campi come il nome dell'interfaccia da usare (ifr.name) e la flag di attivazione modalità promiscua (IFF_PROMISC).
                         Le flag della struct sono tutte dentro ad una successione di bit unificati, per tanto per modificare una flag sola usiamo |= per non annullare
                         altri campi impostati di default dalla struttura.
+
+RECVFROM:
+ - libreria ---> <sys/socket.h>;
+ - utilizzo ---> 'ssize_t recvfrom(int sockfd, void buf[restrict .len], size_t len, int flags,
+                            struct sockaddr *_Nullable restrict src_addr, socklen_t *_Nullable restrict addrlen)';
+                        dove buf è dove verrà messa il pacchetto, len la grandezza del buffer allocato, flag impostazioni varie (vedi più avanti se serve qualcosa)
+                        struct sockaddr per ora impostata a NULL, così come addrlen a 0. Il minimo di una MTU è 46 byte, il massimo intorno ai 1500.
