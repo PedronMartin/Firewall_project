@@ -20,6 +20,7 @@ char buffer[max_MTU];
 void initialize_firewall(const char *interface);
 void sigint_handler();
 void packet_garbage();
+void packet_parsing(const char *buffer, ssize_t bytes_received);
 void shutdown_firewall();
 
 //initial point for the firewall program
@@ -95,6 +96,11 @@ void initialize_firewall(const char *interface){
         shutdown_firewall(-1);
     }
 
+    /*
+    TODO:
+    add binding between the socket and the desired interface (without the default it is loopback).
+    */
+
     printf("Firewall initialized on interface: %s\n", interface);
     return;
 }
@@ -134,7 +140,66 @@ void packet_garbage(){
             continue;
         }
         printf("[FIREWALL] Received packet of size: %zd\n", bytes_received);
+        /*printf("[FIREWALL] Packet content: ");
+        for(ssize_t i = 0; i < bytes_received; i++){
+            printf("%02x ", (unsigned char)buffer[i]);
+        }
+        printf("\n");*/
+        packet_parsing(buffer, bytes_received);
+    }
+}
 
+/*
+
+*/
+void packet_parsing(const char *buffer, ssize_t bytes_received){
+
+    //dst MAC address parsing
+    printf("\t[PACKET PARSING] Destination MAC address: ");
+    for(ssize_t i = 0; i < 6; i++)
+        printf("%02x ", (unsigned char)buffer[i]);
+    printf("\n");
+    //src MAC address parsing
+    printf("\t[PACKET PARSING] Source MAC address: ");
+    for(ssize_t i = 6; i < 12; i++)
+        printf("%02x ", (unsigned char)buffer[i]);
+    printf("\n");
+    //Ethernet type parsing
+    printf("\t[PACKET PARSING] Ethernet type: ");
+    for(ssize_t i = 12; i < 14; i++)
+        printf("%02x ", (unsigned char)buffer[i]);
+    printf("\n");
+    //IP header parsing (if present)
+    if(bytes_received >= 14 && (buffer[12] == 0x08 && buffer[13] == 0x00)){ //check if it's an IP packet (Ethernet type 0x0800)
+        printf("\t[PACKET PARSING] IP header:\n");
+        //IP version and header length
+        printf("\t\tVersion: %d\n", (buffer[14] >> 4) & 0x0F);
+        printf("\t\tHeader length: %d bytes\n", (buffer[14] & 0x0F) * 4);
+        //Type of Service
+        printf("\t\tType of Service: %d\n", buffer[15]);
+        //Total Length
+        printf("\t\tTotal Length: %d bytes\n", (buffer[16] << 8) | buffer[17]);
+        //Identification
+        printf("\t\tIdentification: %d\n", (buffer[18] << 8) | buffer[19]);
+        //Flags and Fragment Offset
+        printf("\t\tFlags: %d\n", (buffer[20] >> 5) & 0x07);
+        printf("\t\tFragment Offset: %d\n", ((buffer[20] & 0x1F) << 8) | buffer[21]);
+        //Time to Live
+        printf("\t\tTime to Live: %d\n", buffer[22]);
+        //Protocol
+        printf("\t\tProtocol: %d\n", buffer[23]);
+        //Header Checksum
+        printf("\t\tHeader Checksum: %04x\n", (buffer[24] << 8) | buffer[25]);
+        //Source IP Address
+        printf("\t\tSource IP Address: %d.%d.%d.%d\n",
+               (unsigned char)buffer[26], (unsigned char)buffer[27],
+               (unsigned char)buffer[28], (unsigned char)buffer[29]);
+        //Destination IP Address
+        printf("\t\tDestination IP Address: %d.%d.%d.%d\n",
+               (unsigned char)buffer[30], (unsigned char)buffer[31],
+               (unsigned char)buffer[32], (unsigned char)buffer[33]);
+    } else {
+        printf("\t[PACKET PARSING] Not an IP packet (Ethernet type 0x0800 not found).\n");
     }
 }
 
